@@ -21,7 +21,11 @@ export default class App extends React.Component {
     this.initialState = {
       inputValue: '0',
       selectedSymbol: null,
-      numDots: 0
+      numDots: 0,
+     // result: '',
+      firstValue: '',
+      secondValue: '',
+      nextValue: false,
       //previousInputValue: 0,
       //result: 0,
     }
@@ -34,7 +38,6 @@ export default class App extends React.Component {
           <Text style={Styles.resultText}>{this.state.inputValue}</Text>
         </View>
         <View style={Styles.buttonContainer}>
-          <Text style={Styles.delete}> Del</Text>
           {this._renderButtons()}
         </View>
       </View>
@@ -64,7 +67,7 @@ export default class App extends React.Component {
   }
 
   _onInputButtonPressed = (input) => {
-    const { inputValue, selectedSymbol, numDots } = this.state;
+    const { inputValue, selectedSymbol, numDots, firstValue, secondValue, nextValue } = this.state;
     switch (input) {
       case '0':
       case '1':
@@ -79,6 +82,15 @@ export default class App extends React.Component {
         this.setState({
           inputValue: (inputValue === '0') ? input : inputValue + input
         })
+        if (!nextValue) {
+          this.setState({
+            firstValue: firstValue + input
+          })
+        } else {
+          this.setState({
+            secondValue: secondValue + input
+          })
+        }
         break;
 
       case '+':
@@ -86,23 +98,37 @@ export default class App extends React.Component {
       case '/':
       case '*':
         this.setState({
+          nextValue: true,
           numDots: 0,
           selectedSymbol: input,
           inputValue: (selectedSymbol !== null ? inputValue.substr(0, inputValue.length - 1) : inputValue) + input
         })
+
         break;
       case '.':
-        let dot = inputValue.slice(-1)
-        if (numDots == 0) {
+        let dot = inputValue.toString().slice(-1)
+        this.setState({
+          inputValue: dot != '.' ? inputValue + input : inputValue,  
+        })
+        if (!nextValue) {
           this.setState({
-            inputValue: dot != '.' ? inputValue + input : inputValue,
-            numDots: numDots + 1
+            firstValue: firstValue + input
+          })
+        } else {
+          this.setState({
+            secondValue: secondValue + input
           })
         }
+        /*         if (numDots == 0) {
+                  this.setState({
+                    inputValue: dot != '.' ? inputValue + input : inputValue,
+                    numDots: numDots + 1
+                  })
+                }
+                else {
+                  return;
+                } */
 
-        else {
-          return;
-        }
         break;
       case 'Clear':
         this.setState(this.initialState);
@@ -112,69 +138,25 @@ export default class App extends React.Component {
         let deletedString = tempInputValue.slice(0, tempInputValue.length - 1);
         let stringLength = tempInputValue.length;
         this.setState({
-          inputValue: stringLength == 1 ? '0' : deletedString
+          inputValue: stringLength == 1 ? '0' : deletedString,
+          firstValue: stringLength == 1 ? '0' : deletedString,
         })
+        break;
+      case '=':
+        let result = eval(firstValue + selectedSymbol + secondValue);
+        this.setState({
+          inputValue: result %1 === 0 ? result: result.toFixed(2),
+          firstValue: result%1 === 0 ? result: result.toFixed(2),
+          secondValue: '',
+          selectedSymbol: null,
+          nextValue: false 
+        })
+
+
+
         break;
     }
 
-    /* switch (typeof input) {
-      case 'number':
-  
-        break;
-      case 'string':
-        return this._stringInput(input) 
-    }*/
   }
-
-  /*  _stringInput(str) {
-     switch (str) {
-       case '+':
-       case '-':
-       case '/':
-       case '*':
-         this.setState({
-           selectedSymbol: str,
-           previousInputValue: this.state.inputValue,
-           inputValue: ''
-         });
-         break;
-       case '=':
-         let symbol = this.state.selectedSymbol,
-           inputValue = this.state.inputValue,
-           previousInputValue = this.state.previousInputValue;
- 
-         if (!symbol) {
-           return;
-         }
- 
-         this.setState({
-           previousInputValue: 0,
-           inputValue: eval(previousInputValue + symbol + inputValue),
- 
-           selectedSymbol: null
-         });
-         break;
-       case '.':
-         inputValue = this.state.inputValue,
- 
-           this.setState({
-             inputValue: inputValue + str
-           });
- 
-         break;
-       case 'Clear':
- 
-         this.setState({ inputValue: 0 });
-         break;
-     }
-   }
- 
-     _numberInput(num){
-       let inputValue=this.state.inputValue +num;
-   
-       this.setState({
-         inputValue: inputValue
-       })
-     } */
 }
 
